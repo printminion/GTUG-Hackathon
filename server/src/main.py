@@ -14,9 +14,7 @@ decorator = OAuth2Decorator(client_id=settings.CLIENT_ID,
                             scope=settings.SCOPE,
                             user_agent='mk-tasks')
 
-
 class MainHandler(webapp.RequestHandler):
-
   @decorator.oauth_aware
   def get(self):
     if decorator.has_credentials():
@@ -33,11 +31,22 @@ class MainHandler(webapp.RequestHandler):
                                               {'tasks': [],
                                                'authorize_url': url}))
 
-
+class BooksHandler(webapp.RequestHandler):
+  @decorator.oauth_aware
+  def get(self):
+    if decorator.has_credentials():
+      service = build('books', 'v1', http=decorator.http())
+#      print(dir(service))
+      result = service.volumes().list(q='search term').execute()
+      books = result.get('items', [])
+      self.response.out.write(template.render('templates/books.html',
+                                              {'books': books}))
+                                              
+    
 def truncate(string, length):
   return string[:length] + '...' if len(string) > length else string
 
-application = webapp.WSGIApplication([('/', MainHandler)], debug=True)
+application = webapp.WSGIApplication([('/', MainHandler),('/books', BooksHandler)], debug=True)
 
 
 def main():
