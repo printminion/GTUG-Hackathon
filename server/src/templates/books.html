@@ -8,6 +8,9 @@ $(function() {
   
 });
 </script>
+<style type="text/css">
+li { list-style-type: none; }
+</style>
 </head>
 
 <body>
@@ -15,11 +18,13 @@ $(function() {
 <div id="books"></div>
 <ul>
   {% for book in books %}
-  <li>{{ book.volumeInfo.title }}</li>
+  <li>
+  <img src="{{ book.volumeInfo.imageLinks.smallThumbnail }}"/>
+{{ book.volumeInfo.title }}
+  
+  </li>
   {% endfor %}
   </ul>
-{{ books.content }}
-<hr>
-<address></address>
-<!-- hhmts start -->Last modified: Tue Aug 23 21:18:46 CEST 2011 <!-- hhmts end -->
-</body> </html>
+
+</body>
+  </html>
