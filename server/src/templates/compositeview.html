@@ -5,26 +5,43 @@
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
 <script type="text/javascript">
 $(function() {
-  
+  $('.book').click(function() {
+
+      $.post('/tasks', { 'key' : $(this).data('key') }, function() {
+  window.location.reload() });
+  });
 });
 </script>
 <style type="text/css">
 li { list-style-type: none; }
+#books { float: left; }
+#tasks { float: left; }
 </style>
 </head>
 
 <body>
+<div id="books">
 <h1>books!</h1>
-<div id="books"></div>
 <ul>
   {% for book in books %}
-  <li>
+  <li  class="book" data-key="{{book.volumeInfo.infoLink}}">
   <img src="{{ book.volumeInfo.imageLinks.smallThumbnail }}"/>
 {{ book.volumeInfo.title }}
   
   </li>
   {% endfor %}
   </ul>
-
+</div>
+<div id="tasks">
+<h1>tasks!</h1>
+  <ul>
+  
+  {% for task in tasks %}
+  <li>
+    <a href="{{ task.title }}">{{ task.title }}</a>
+  </li>
+  {% endfor %}  
+  </ul>
+</div>
 </body>
   </html>

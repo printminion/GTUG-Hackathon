@@ -15,38 +15,44 @@ decorator = OAuth2Decorator(client_id=settings.CLIENT_ID,
                             user_agent='mk-tasks')
 
 class MainHandler(webapp.RequestHandler):
-  @decorator.oauth_aware
+  @decorator.oauth_required
   def get(self):
-    if decorator.has_credentials():
       service = build('tasks', 'v1', http=decorator.http())
       result = service.tasks().list(tasklist='@default').execute()
       tasks = result.get('items', [])
-      for task in tasks:
-        task['title_short'] = truncate(task['title'], 26)
       self.response.out.write(template.render('templates/index.html',
                                               {'tasks': tasks}))
-    else:
-      url = decorator.authorize_url()
-      self.response.out.write(template.render('templates/index.html',
-                                              {'tasks': [],
-                                               'authorize_url': url}))
 
-class BooksHandler(webapp.RequestHandler):
-  @decorator.oauth_aware
-  def get(self):
-    if decorator.has_credentials():
+class TasksHandler(webapp.RequestHandler):
+  def add_task(self, title):
+      service = build('tasks', 'v1', http=decorator.http())
+      result = service.tasks().insert(tasklist='@default', body = { 'title' : title }).execute()
+
+  def post(self):
+    self.add_task(self.request.get('key', ''))
+
+class CompositeViewHandler(webapp.RequestHandler):
+  def get_tasks(self):
+      service = build('tasks', 'v1', http=decorator.http())
+      result = service.tasks().list(tasklist='@default').execute()
+      tasks = result.get('items', [])
+      return tasks
+
+  def get_books(self):
       service = build('books', 'v1', http=decorator.http())
-#      print(dir(service))
       result = service.volumes().list(q='search term').execute()
       books = result.get('items', [])
-      self.response.out.write(template.render('templates/books.html',
-                                              {'books': books}))
-                                              
-    
-def truncate(string, length):
-  return string[:length] + '...' if len(string) > length else string
-
-application = webapp.WSGIApplication([('/', MainHandler),('/books', BooksHandler)], debug=True)
+      return books
+  
+  @decorator.oauth_required
+  def get(self):
+      tasks = self.get_tasks()
+      books = self.get_books()
+      
+      self.response.out.write(template.render('templates/compositeview.html',
+                                              {'books': books, 'tasks' : tasks}))
+                                                  
+application = webapp.WSGIApplication([('/login', MainHandler), ('/', CompositeViewHandler), ('/tasks', TasksHandler)], debug=True)
 
 
 def main():
